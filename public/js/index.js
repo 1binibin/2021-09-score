@@ -8,8 +8,10 @@ true 판정 : false판정 외 모든것
 /*************** Global init ********************/
 //console.log(firebase);
 var auth = firebase.auth();
-var db = firebase.database();
 var googleAuth = new firebase.auth.GoogleAuthProvider();
+var db = firebase.database();
+var user = null;
+
 
 // console.log(auth, db, googleAuth);
 
@@ -18,9 +20,28 @@ var googleAuth = new firebase.auth.GoogleAuthProvider();
 
 
 /*************** event callback ********************/
-function onAuthChanged(user) {// auth 상태가 변하면 알려줘!
+function onSubmit(f) {
+    if(!user) alert('로그인 후 사용해 주세요.');
+    else{
+        var data = {
+        username:f.username.value.trim(),
+        comment: f.comment.value.trim(),
+        createdAt: new Date().getTime(),
+        uid: user.uid,
+        email: user.email
+        }
+    if(data.username !== '' && data.comment !== '' && user){
+        db.ref('root/test').push(data);
+        f.username.value = '';
+        f.reset();
+        }
+    }
+    return false;
+}
+
+function onAuthChanged(v) {// auth 상태가 변하면 알려줘!
+    user = v;
     if(user) {
-        console.log(user);
         $('.bt-login').hide();
         $('.bt-logout').show();
         $('.photo-logo img').attr('src', user.photoURL);
@@ -36,6 +57,7 @@ function onAuthChanged(user) {// auth 상태가 변하면 알려줘!
 }
 
 function onLogin() {
+    // auth.signInWithRedirect(googleAuth);
     auth.signInWithPopup(googleAuth);
 }
 
