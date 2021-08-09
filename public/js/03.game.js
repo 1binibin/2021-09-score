@@ -44,7 +44,10 @@ function onInit() {
 }
 
 function onStart() {
-
+    $('.bt-start').attr('disabled', true);
+    $('.bt-reset').attr('disabled', true);
+    var target = $('.stage-wrap').innerWidth();
+    $('.member-wp').stop().animate( {'right':'10px'}, 2000)
 }
 
 function onReset() {
@@ -62,4 +65,3 @@ $('.bt-start').click(onStart);
 $('.bt-reset').click(onReset);
 
 /*************** start init *****************/
-
