@@ -34,6 +34,9 @@ function removeEl(selector, empty) {
     else $(selectot).remove();
 }
 
+function getTarget() {
+    return ( $('.stage-wrap').outerWidth() - $('.member-wp').outerWidth() - 10 ) + 'px';
+}
 /*************** event callback *****************/
 function onInit() {
     $('.bt-init').hide();
@@ -46,8 +49,7 @@ function onInit() {
 function onStart() {
     $('.bt-start').attr('disabled', true);
     $('.bt-reset').attr('disabled', true);
-    var target = $('.stage-wrap').innerWidth();
-    $('.member-wp').stop().animate( {'right':'10px'}, 2000)
+    $('.member-wp').stop().animate( {'left':getTarget()}, 2000)
 }
 
 function onReset() {
