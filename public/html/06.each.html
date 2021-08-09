@@ -36,11 +36,11 @@
         /* for(var i=0; i < $('.box').length; i++) {
             $('.box').eq(i).html('box'+i);
         } */
-        var arr = ['A', 'B', 'C']
+        var arr = ['A', 'B', 'C'] //foreach: 배열을 돌림 javascript 메서드
         arr.forEach(function(v, i) {
             console.log(i,v);
         })
-        $('.box').each( function(i) {
+        $('.box').each( function(i) { // $('.box').each: box안에서 각각 jQuery메서드
             console.log(i, $(this))
             $(this).html('box'+i)
         } );
