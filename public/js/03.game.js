@@ -49,7 +49,13 @@ function onInit() {
 function onStart() {
     $('.bt-start').attr('disabled', true);
     $('.bt-reset').attr('disabled', true);
-    $('.member-wp').stop().animate( {'left':getTarget()}, 2000)
+    // $('.member-wp').stop().animate( {'left':getTarget()}, 2000)
+    $('.member-wp').each(function(i) {
+        var speed = random(1500,500);
+        console.log(i, speed);
+        $(this).stop().animate( {'left':getTarget()}, speed)
+    })
+    // database 저장
 }
 
 function onReset() {
