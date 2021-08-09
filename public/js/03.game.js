@@ -66,11 +66,13 @@ function onStart() {
     $('.bt-reset').attr('disabled', true);
     // $('.member-wp').stop().animate( {'left':getTarget()}, 2000)
     $('.member-wp').each(function(i) {
+        console.log('each 안!')
         var speed = random(1500,500);
         console.log(i, speed);
         $(this).stop().animate( {'left':getTarget()}, speed, function() {
             console.log('Animation 끝!')
         });
+        console.log('each 끝')
     });
     // 데이터베이스 저장 - 추후 구현.
     // modal창
