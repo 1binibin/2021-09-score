@@ -79,14 +79,10 @@ function onStart() {
     var cnt = $('.member-wp').length, num = 0, dt = new Date().getTime();
     var members = [];   // 선수 정보
     var result = [];    // 결과 sorting
-    function animateCb() {
-        if(++num === cnt) {
-            $('.modal-wrapper').show();
-        }
-    }
 
 	$('.bt-start').attr('disabled', true);
 	$('.bt-reset').attr('disabled', true);
+    $('.modal-wrapper .datetime').html(moment().format('YYYY년 M월 D일 HH시 mm분 ss초'))
 	$('.member-wp').each(function(i) {
         members.push({
             name: $(this).find('input').val().trim() || (i+1) + '번',
@@ -98,8 +94,10 @@ function onStart() {
         return a.speed - b.speed;
     });
     addList('.modal-wrapper .list-body', result);
-        members.forEach(function(v, i){ 
-		$('member-wp').eq(i).stop().animate({'left': getTarget()}, v.speed, animateCb);
+    $('member-wp').each(function(i){ 
+		$(this).stop().animate({'left': getTarget()}, members[i].speed, function () {
+            if(++num === cnt) $('.modal-wrapper').show(); 
+        });
     });
 	// animation이 완료된 후
 }
