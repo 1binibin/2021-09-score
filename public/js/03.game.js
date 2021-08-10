@@ -13,83 +13,92 @@
 // database 저장
 /*
 {
-    uid: '',
-    ip: '',
-    dt:1693474929398,
-    result : [
-        { name: '홍길동', speed: 1513 },
-        { name: '홍길순', speed: 1523 },
-        { name: '홍길만', speed: 1578 },
-        { name: '홍길룡', speed: 1629 }
-    ]
+	uid: '',
+	ip: '',
+	dt: 1693474929398,
+	result: [
+		{ name: '홍길동', speed: 1513 },
+		{ name: '홍길순', speed: 1523 },
+		{ name: '홍길만', speed: 1578 },
+		{ name: '홍길룡', speed: 1629 }
+	]
 }
 */
 
- console.log( document.initForm.cnt.value ); //js
- console.log( document.querySelector('form[name="initForm"] input[name="cnt"]').value ); //js
- console.log( $('form[name="initForm"] input[name="cnt"]').val() ); //jquery
- console.log( $('#cnt').val() ); //jquery
+console.log( document.initForm.cnt.value ); //js
+console.log( document.querySelector('form[name="initForm"] input[name="cnt"]').value ); //js
+console.log( $('form[name="initForm"] input[name="cnt"]').val() ); //jquery
+console.log( $('#cnt').val() ); //jquery
 
-/*************** 글로벌 설정 *****************/
+/*************** global init **************/
 
-/*************** user function *****************/
-function addMember(selector,n) {
-    for(var i=0, html; i<n; i++){
-        html  = '<div class="member-wp">';
-        html  += '<div class="imgs">';
-        html  += '<img src="../img/marathon.png" class="w100">';
-        html  += '</div>';
-        html  += '<input type="text" name="member" class="form-control">';
-        html  += '</div>';
-        $(selector).append(html);
-    }
+
+
+/************** user function *************/
+function addMember(selector, n) {
+	for(var i=0, html; i<n; i++) {
+		html  = '<div class="member-wp">';
+		html += '<div class="imgs">';
+		html += '<img src="../img/marathon.png" class="w100">';
+		html += '</div>';
+		html += '<input type="text" name="member" class="form-control">';
+		html += '</div>';
+		$(selector).append(html);
+	}
 }
+
 function removeEl(selector, empty) {
-    if(empty) $(selector).empty();
-    else $(selectot).remove();
+	if(empty) $(selector).empty();
+	else $(selector).remove(); 
 }
 
 function getTarget() {
-    return ( $('.stage-wrap').outerWidth() - $('.member-wp').outerWidth() - 10 ) + 'px';
+	return ($('.stage-wrap').outerWidth() - $('.member-wp').outerWidth() - 10) + 'px';
 }
-/*************** event callback *****************/
+
+/************** event callback ************/
 function onInit() {
-    $('.bt-init').hide();
-    $('.bt-start').show();
-    $('.bt-reset').show();
-    $('#cnt').attr('readonly', true)
-    addMember( '.stage-wrap', $('#cnt').val() );
+	$('.bt-init').hide();
+	$('.bt-start').show();
+	$('.bt-reset').show();
+	$('#cnt').attr('readonly', true);
+	addMember('.stage-wrap', $('#cnt').val());
 }
 
 function onStart() {
-    $('.bt-start').attr('disabled', true);
-    $('.bt-reset').attr('disabled', true);
-    // $('.member-wp').stop().animate( {'left':getTarget()}, 2000)
-    $('.member-wp').each(function(i) {
-        console.log('each 안!')
-        var speed = random(1500,500);
-        console.log(i, speed);
-        $(this).stop().animate( {'left':getTarget()}, speed, function() {
-            console.log('Animation 끝!')
-        });
-        console.log('each 끝')
-    });
-    // 데이터베이스 저장 - 추후 구현.
-    // modal창
+	$('.bt-start').attr('disabled', true);
+	$('.bt-reset').attr('disabled', true);
+	$('.member-wp').each(function(i) {
+		var speed = random(1500, 200);
+		$(this).stop().animate({'left': getTarget()}, speed, animateCb);
+	});
+	// animation이 완료된 후
+	var cnt = $('.member-wp').length, num = 0;
+	function animateCb() {
+		if(++num === cnt) $('.modal-wrapper').show();
+	}
 }
 
 function onReset() {
-    $('.bt-init').show();
-    $('.bt-start').hide();
-    $('.bt-reset').hide();
-    $('#cnt').val(4).focus().attr('readonly', false);
-    removeEl('.stage-wrap', true);
-    // removeEl('.member-wp');
+	$('.bt-init').show();
+	$('.bt-start').hide();
+	$('.bt-reset').hide();
+	$('#cnt').val(4).focus().attr('readonly', false);
+	removeEl('.stage-wrap', true);
 }
 
-/*************** event init *****************/
-$('.bt-init').click(onInit);
-$('.bt-start').click(onStart);
-$('.bt-reset').click(onReset);
+function onModalClose() {
+	$('.modal-wrapper').hide();
+}
 
-/*************** start init *****************/
+/*************** event init ***************/
+$('.wrapper .bt-init').click(onInit);
+$('.wrapper .bt-start').click(onStart);
+$('.wrapper .bt-reset').click(onReset);
+
+$('.modal-wrapper .bt-close').click(onModalClose);
+
+
+
+/*************** start init ***************/
+
