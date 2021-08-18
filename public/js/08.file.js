@@ -36,7 +36,7 @@ function onSubmit(e) {
     if(el.files.length) {
         var file = document.querySelector('input[name="upfile"]').files[0];  //jq: $('input[name="upfile"]')[0].files, input type file
         var savename = genFile();
-        var uploader = stRoot.child(savename).put();
+        var uploader = stRoot.child(savename).put(file);
     }
 }
 
