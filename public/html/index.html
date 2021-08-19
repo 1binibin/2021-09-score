@@ -1,3 +1,13 @@
+<!-- <thead class="thead-dark">
+                <tr>
+                    <th class="col-2 col-md-2 col-lg-1">번호</th>
+                    <th class="col-10 col-md-7 com-lg-6">제목</th>
+                    <th class="d-none d-md-table-cell col-md-3 col-lg-2">작성자</th>
+                    <th class="d-none d-lg-table-cell col-lg-2">작성일</th>
+                    <th class="d-none d-lg-table-cell col-lg-1">조회</th>
+                </tr>
+            </thead>
+            <tbody> -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -68,26 +78,61 @@
 
     <!-- list-wrapper -->
     <section class="list-wrapper wrapper">
-        <table class="table table-hover table-striped table-condensed text-center">
+        <div class="title-wrap">
+            <h2 class="title">전체 게시글</h2>
+        </div>
+        <table class="list-tbl table table-hover table-striped table-condensed text-center">
             <thead class="thead-dark">
                 <tr>
-                    <th class="col-1">번호</th>
-                    <th class="col-">제목</th>
-                    <th class="col-1">작성자</th>
-                    <th class="col-">작성일</th>
-                    <th class="col-">조회</th>
+                    <th>번호</th>
+                    <th>제목</th>
+                    <th>작성자</th>
+                    <th>작성일</th>
+                    <th>조회</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>1</td>
-                    <td>좌석간 거리두기</td>
+                    <td><img src="../img/png.png" class="icon"> 좌석간 거리두기</td>
+                    <td>홍길동</td>
+                    <td>2021-08-19</td>
+                    <td>3</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td><img src="../img/gif.png" class="icon"> 좌석간 거리두기</td>
+                    <td>홍길동</td>
+                    <td>2021-08-19</td>
+                    <td>3</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td><img src="../img/jpg.png" class="icon"> 좌석간 거리두기</td>
+                    <td>홍길동</td>
+                    <td>2021-08-19</td>
+                    <td>3</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td><img src="../img/video.png" class="icon"> 좌석간 거리두기</td>
                     <td>홍길동</td>
                     <td>2021-08-19</td>
                     <td>3</td>
                 </tr>
             </tbody>
         </table>
+        <div class="pager-wrap">
+            <ul class="pagination justify-content-center">
+                <li class="page-item"><a class="page-link" href="#">&laquo;</a></li>
+                <li class="page-item"><a class="page-link" href="#">&lt;</a></li>
+                <li class="page-item"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><a class="page-link" href="#">&gt;</a></li>
+                <li class="page-item"><a class="page-link" href="#">&raquo;</a></li>
+            </ul>
+        </div>
     </section>
     <!-- footer-wrapper -->
     <section class="footer-wrapper">
