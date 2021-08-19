@@ -3,9 +3,10 @@ var auth = firebase.auth();
 var database = firebase.database();
 var storage = firebase.storage();
 var googleAuth = new firebase.auth.GoogleAuthProvider();
-var dbRoot = database.ref('root');
+var dbRoot = database.ref('root/uploads');
 var stRoot = storage.ref().child('imgs');
-var upfile;
+var user = null;
+var allowExt = ['jpg', 'jpeg', 'png', 'gif', 'mp4'];
 
 //console.log(uuidv4());
 
@@ -20,13 +21,16 @@ function genFile() {
 
 /*************** event callback *****************/
 function onAuthChanged(r) {
-    if(r) {
+    console.log(r);
+    user = r;
+    if(user) {
         $('.bt-login').hide();
         $('.bt-logout').show();
     }
     else {
         $('.bt-login').show();
         $('.bt-logout').hide();
+        user = null;
     }
 }
 function onLogin() {
@@ -40,39 +44,66 @@ function onLogout() {
 function onSubmit(e) {
     e.preventDefault();
     var el = document.querySelector('input[name="upfile"]');
-    if(el.files.length) {
+    if(el.files.length && user) {
         var file = document.querySelector('input[name="upfile"]').files[0];  //jq: $('input[name="upfile"]')[0].files, input type file
-        var savename = genFile();
-        var uploader = stRoot.child(savename.folder).child(savename.file).put(file);
-        uploader.on('state_changed', onUploading, onUploadError, onUploaded)
+        if(allowExt.indexOf( file.name.split('.').pop().toLowerCase() ) > -1){
+            var savename = genFile();
+            var uploader = stRoot.child(savename.folder).child(savename.file).put(file);
+            uploader.on('state_changed', onUploading, onUploadError, onUploaded)
+        }
+        else alert('업로드 가능한 파일은 이미지 또는 mp4영상 입니다.')
+    }
+    else if(user === null){
+        alert('로그인 후 시도해 주세요.');
+    }
+    else {
+        $('input[name="upfile"]').focus();
+    }
+    
+    function onUploading(snapshot) { // snapshot 현재 상태를 뜻함
+        console.log('uploading', snapshot.bytesTransferred);    // 파일크기 변하는거
+        console.log('uploading', snapshot.totalBytes);  // 파일 크기
+        console.log('========================');
+        upfile = snapshot;
+    }
+    
+    function onUploaded() {
+        upfile.ref.getDownloadURL().then(onSuccess).catch(onError); //getDownloadURL 다운로드 주소
+    }
+    
+    function onUploadError(err) {
+        console.log('error', err);
+        if(err.code === 'storage/unauthorized') location.href = '../403.html'
+        else console.log('error',err);
+        //location.href = '../403.html';  // 서버에 한번더 요청 403으로 넘어감
+    }
+    
+    function onSuccess(r) {
+        if(file.type.split('/')[0] === 'image'){    // 
+            $('.main-img').attr('src', r).show();
+            $('.main-video').hide();
+        } 
+        else if(file.type.split('/')[0] === 'video'){
+            $('.main-video').attr('src', r).show();
+            $('.main-img').hide();
+        }
+        var saveData = {    // realtime database에 파일을 올리면서 보내줄 내용
+            oriname: file.name,
+            savename: savename.file,
+            path: 'imgs/' + savename.folder,
+            type: file.type,
+            size: file.size,
+        }
+        console.log(file);
+        dbRoot.push(saveData);
+    }
+    
+    function onError(err) {
+        console.log(err)
     }
 }
 
-function onUploading(snapshot) { // snapshot 현재 상태를 뜻함
-    console.log('uploading', snapshot.bytesTransferred);    // 파일크기 변하는거
-    console.log('uploading', snapshot.totalBytes);  // 파일 크기
-    console.log('========================');
-    upfile = snapshot;
-}
 
-function onUploaded(snapshot) {
-    upfile.ref.getDownloadURL().then(onSuccess).catch(onError); //getDownloadURL 다운로드 주소
-}
-
-function onUploadError(err) {
-    console.log('error', err);
-    if(err.code === 'storage/unauthorized') location.href = '../403.html'
-    else console.log('error',err);
-    //location.href = '../403.html';  // 서버에 한번더 요청 403으로 넘어감
-}
-
-function onSuccess(r) {
-    console.log(r)
-}
-
-function onError(err) {
-    console.log(err)
-}
 
 /*************** event init *****************/
 auth.onAuthStateChanged(onAuthChanged);
