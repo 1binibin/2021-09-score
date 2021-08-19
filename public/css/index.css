@@ -1,0 +1,36 @@
+/********************** global init *********************/
+
+
+/********************** header wrapper *********************/
+.header-wrapper {background-color: #333; color: #f8f8f8; font-family: 'Lato', sans-serif; display: flex; align-items: center;}
+.header-wrapper .logo-wrap {font-size: 1.25em; padding-left: .75em; display: flex; align-items: center;}
+.header-wrapper .logo-wrap .photo-logo {width: 36px; height: 36px; border-radius: 50px;  margin-right: .5em; overflow: hidden; display: none;}
+.header-wrapper .logo-wrap .icon-logo {margin-right: .5em;}
+.header-wrapper .navi-wrap {margin-left: auto; display: flex;}
+.header-wrapper .navi-wrap .navi {padding: 1em 1.25em; cursor: pointer;}
+.header-wrapper .navi-wrap .navi:hover {background-color: azure; color: #111;}
+.header-wrapper .bt-login { background-color: darkslategray;}
+.header-wrapper .bt-logout {display: none; background-color: #572128;}
+/**********************  *********************/
+
+
+/********************** 반응형 *********************/
+@media (max-width: 1399px) {
+    
+}
+
+@media (max-width: 1199px) {
+    
+}
+
+@media (max-width: 991px) {
+    
+}
+
+@media (max-width: 767px) {
+    
+}
+
+@media (max-width: 575px) {
+    
+}
