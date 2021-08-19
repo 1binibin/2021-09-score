@@ -16,8 +16,8 @@
 /*********** list ****************/
 .list-wrap {width: 101%;}
 .list-wrap .list {width: 19%; margin-right: 1%; border: 1px solid #dedede; border-radius: 6px; padding: .5em;}
-.list-wrap .list .img,
-.list-wrap .list .video {width: 100%;}
+.list-wrap .list img,
+.list-wrap .list video {width: 100%;}
 
 /********************** 반응형 *********************/
 @media (max-width: 1399px) {
