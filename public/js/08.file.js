@@ -21,16 +21,19 @@ function genFile() {
 
 /*************** event callback *****************/
 function onAuthChanged(r) {
-    console.log(r);
+    // console.log(r);
     user = r;
     if(user) {
         $('.bt-login').hide();
         $('.bt-logout').show();
+        dbRoot.on('child_added', onAdded);
     }
     else {
         $('.bt-login').show();
         $('.bt-logout').hide();
-        user = null;
+        $('.list-wrap').empty();
+        $('.main-img').attr('src', '').hide();
+        $('.main-video').attr('src', '').hide();
     }
 }
 function onLogin() {
@@ -79,6 +82,7 @@ function onSubmit(e) {
     }
     
     function onSuccess(r) {
+        $('.mainp-wrap').addClass('py-5');
         if(file.type.split('/')[0] === 'image'){    // 
             $('.main-img').attr('src', r).show();
             $('.main-video').hide();
@@ -90,7 +94,7 @@ function onSubmit(e) {
         var saveData = {    // realtime database에 파일을 올리면서 보내줄 내용
             oriname: file.name,
             savename: savename.file,
-            path: 'imgs/' + savename.folder,
+            path: r,
             type: file.type,
             size: file.size,
         }
@@ -103,7 +107,18 @@ function onSubmit(e) {
     }
 }
 
-
+function onAdded(r) {
+    // console.log(r, r.key, r.val());
+    html = '<li class="list">'
+    if(r.val().type.indexOf('image') > -1 ) {
+        html += '<a href="'+r.val().path+'" target="_blank"><img src="'+r.val().path+'"></a>';
+    }
+    else{
+        html += '<a href="'+r.val().path+'" target="_blank"><video src="'+r.val().path+'"></a>';
+    }
+    html += '</li>'
+    $(html).prependTo('.list-wrap')
+}
 
 /*************** event init *****************/
 auth.onAuthStateChanged(onAuthChanged);
