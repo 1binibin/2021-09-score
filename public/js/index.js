@@ -99,9 +99,9 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
 	var writer = writeForm.writer;
 	var upfile = writeForm.upfile;
 	var content = writeForm.content;
-	if(!requiredValid(title)) {
-		title.focus();
-		return false;
+	if(!user()) {
+        alert('로그인 후 이용하세요.')
+        return false;
 	}
 	if(!requiredValid(writer)) {
 		writer.focus();
@@ -111,14 +111,43 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
 		return false;
 	}
 	// firebase save
-	var data = {};
-	data.user = user.uid;
-	data.title = title.value;
-	data.writer = writer.value;
-	data.content = content.value;
-	data.file = (upfile.files.length) ? upfile.files[0] : {};
-	db.push(data).key; // firebase저장
+    var data = {};
+    data.user = user.uid;
+    data.title = title.value;
+    data.writer = writer.value;
+    data.content = content.value;
+    data.createAt = new Date().getTime();
+    if(upfile.files.length) {       // 파일이 존재하면 처리 로직
+        var file =upfile.files[0];
+        var savename = genFile();
+        var uploader = storage.child(savename.folder).child(savename.file).put(file);
+        uploader.on('state_changed', onUploading, onUploadError, onUploaded)
+    }
+    else {
+        db.push(data).key; // firebase저장
+    
+    }
+    function onUploading(snapshot) { // 파일이 업로드 되는 동안
+        console.log('uploading', snapshot.bytesTransferred);    // 파일크기 변하는거
+        console.log('uploading', snapshot.totalBytes);  // 파일 크기
+        console.log('========================');
+        upfile = snapshot;
+    }
+    
+    function onUploaded() {     //파일업로드 완료 후
+        upfile.ref.getDownloadURL().then(onSuccess).catch(onError); //getDownloadURL 다운로드 주소
+    }
+    
+    function onUploadError(err) {   // 파일 업로드 실패
+        console.log('error', err);
+        if(err.code === 'storage/unauthorized') location.href = '../403.html'
+        else console.log('error',err);
+        //location.href = '../403.html';  // 서버에 한번더 요청 403으로 넘어감
+    }
 }
+
+
+
 
 function onRequiredValid(e) {  // title, writer에서 blur되거나 keyup되면
     //var el = this; //e.target;
