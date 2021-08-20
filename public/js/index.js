@@ -33,7 +33,7 @@ var firebaseStorage = firebase.storage();
 var db = firebaseDatabase.ref('root/board');
 var storage = firebaseStorage.ref('root/board');
 var user = null;
-var allowExt = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4']
+var allowType = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4']
 
 
 /*************** element init *****************/
@@ -80,11 +80,13 @@ function onWrite() {    // 모달창이 오픈 되면.
 
 function onClose() {    // 모달창이 닫히면
     $(writeWrapper).stop().fadeOut(300);
+
     onWriteReset();
     
 }
 
 function onWriteReset(e) {  // form을 원상태로 돌리기
+    writeForm.reset();  // button[type="reset"] 클릭한 효과
     writeForm.title.value = '';
     writeForm.title.classList.remove('active');
     writeForm.writer.value = '';
@@ -138,8 +140,7 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
     }
     
     function onUploaded() {     //파일업로드 완료 후
-        loading.style.display = 'none';
-        upfile.ref.getDownloadURL().then(onSuccess).catch(onError); //getDownloadURL 다운로드 주소
+        upload.ref.getDownloadURL().then(onSuccess).catch(onError); //getDownloadURL 다운로드 주소
     }
     
     function onUploadError(err) {   // 파일 업로드 실패
