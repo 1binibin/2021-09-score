@@ -80,19 +80,30 @@ function onWriteReset(e) {  // form을 원상태로 돌리기
 }
 
 function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검증
-    e.preventDefault();
-    var title = writeForm.title;
-    var writer = writeForm.writer;
-    var upfile = writeForm.upfile.files;
-    var content = writeForm.content.value.trim();
-    if(!requiredValid(title)) {
-        title.focus();
-        return false;
-    }
-    if(!requiredValid(writer)) {
-        writer.focus();
-        return false;
-    }
+	e.preventDefault();
+	var title = writeForm.title;
+	var writer = writeForm.writer;
+	var upfile = writeForm.upfile;
+	var content = writeForm.content;
+	if(!requiredValid(title)) {
+		title.focus();
+		return false;
+	}
+	if(!requiredValid(writer)) {
+		writer.focus();
+		return false;
+	}
+	if(!upfileValid(upfile)) {
+		return false;
+	}
+	// firebase save
+	var data = {};
+	data.user = user.uid;
+	data.title = title.value;
+	data.writer = writer.value;
+	data.content = content.value;
+	data.file = (upfile.files.length) ? upfile.files[0] : {};
+	db.push(data).key; // firebase저장
 }
 
 function onRequiredValid(e) {  // title, writer에서 blur되거나 keyup되면
@@ -112,24 +123,28 @@ function requiredValid(el) {    // 입력하지 않으면 하단에 required-com
         next.classList.remove('active');
         return true;
     }
+    
 }
 
 
 function onUpfileChange(e) {    // upfile에서 change 되면
-    var next = $(el).next()[0];
-    if(this.files.length > 0 && (allowType.indexOf(this.files[0].type) === -1)) {
-        el.classList.add('active');
-        next.classList.add('active');
-        return ture;
-    }
-    else {
-        el.classList.remove('active');
-        next.classList.remove('active');
-        return true;
-    }
+    upfileValid(this)
 }
-    console.log(this.files);
-    console.log(this.files[0]);
+
+function upfileValid(el) {
+	var next = $(el).next()[0];
+	if(el.files.length > 0 && allowType.indexOf(el.files[0].type) === -1) {
+		el.classList.add('active');
+		next.classList.add('active');
+		return false; 
+	}
+	else {
+		el.classList.remove('active');
+		next.classList.remove('active');
+		return true;
+	}
+}
+
 
 
 /*************** event init *****************/
