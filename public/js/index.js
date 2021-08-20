@@ -41,10 +41,11 @@ var btSave = document.querySelector('.write-wrapper .bt-save');      // 글작�
 var btLogin = document.querySelector('.header-wrapper .bt-login');   // 로긴버튼
 var btLogout = document.querySelector('.header-wrapper .bt-logout'); // 로그아웃 버튼
 var btWrite = document.querySelector('.list-wrapper .bt-write');     // 글작성 모달창 오픈버튼
-var btClose = document.querySelector('.write-wrapper .bt-close');     // 글작성 모달창 클로즈버튼
-var btReset = document.querySelector('.write-wrapper .bt-reset');     // 글작성 모달창 리셋버튼
+var btClose = document.querySelector('.write-wrapper .bt-close');    // 글작성 모달창 클로즈버튼
+var btReset = document.querySelector('.write-wrapper .bt-reset');    // 글작성 모달창 리셋버튼
 var writeWrapper = document.querySelector('.write-wrapper');         // 글작성 모달창
 var writeForm = document.writeForm;                                  // 글작성 form , 'form'만 name명 으로 접근가능
+var loading = document.querySelector('.write-wrapper .loading-wrap');   // 파일 업로드 로딩바
 
 /*************** user function  *****************/
 
@@ -72,6 +73,7 @@ function onLogout() {   //btLogout이 클릭되면
 }
 
 function onWrite() {    // 모달창이 오픈 되면.
+    loading.style.display = 'none';
     $(writeWrapper).stop().fadeIn(300);
     writeForm.title.focus();
 }
@@ -99,7 +101,7 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
 	var writer = writeForm.writer;
 	var upfile = writeForm.upfile;
 	var content = writeForm.content;
-	if(!user()) {
+	if(!user) {
         alert('로그인 후 이용하세요.')
         return false;
 	}
@@ -118,31 +120,47 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
     data.content = content.value;
     data.createAt = new Date().getTime();
     if(upfile.files.length) {       // 파일이 존재하면 처리 로직
+        var upload = null;
         var file =upfile.files[0];
         var savename = genFile();
         var uploader = storage.child(savename.folder).child(savename.file).put(file);
         uploader.on('state_changed', onUploading, onUploadError, onUploaded)
+        data.file = { folder: 'root/board/'+savename.folder, name: savename.file};
     }
     else {
         db.push(data).key; // firebase저장
-    
+        onClose();
     }
+
     function onUploading(snapshot) { // 파일이 업로드 되는 동안
-        console.log('uploading', snapshot.bytesTransferred);    // 파일크기 변하는거
-        console.log('uploading', snapshot.totalBytes);  // 파일 크기
-        console.log('========================');
-        upfile = snapshot;
+        loading.style.display = 'flex';
+        upload = snapshot;
     }
     
     function onUploaded() {     //파일업로드 완료 후
+        loading.style.display = 'none';
         upfile.ref.getDownloadURL().then(onSuccess).catch(onError); //getDownloadURL 다운로드 주소
     }
     
     function onUploadError(err) {   // 파일 업로드 실패
+        loading.style.display = 'none';
         console.log('error', err);
         if(err.code === 'storage/unauthorized') location.href = '../403.html'
-        else console.log('error',err);
-        //location.href = '../403.html';  // 서버에 한번더 요청 403으로 넘어감
+        else {
+            alert('파일 업로드에 실패하였습니다. 관리자에게 문의 후 다시 시도해 주세요.');
+            console.log('error',err);
+        }
+    }
+
+    function onSuccess(r) { // r: 실제 웹으로 접근 가능한 경로
+        data.file.path = r;
+        db.push(data).key;
+        onClose();
+    }
+
+    function onError(err) {
+        alert('파일 가져오기에 실패 하였습니다. 다시 시도해 주세요.');
+        console.log(err);
     }
 }
 
@@ -188,7 +206,10 @@ function upfileValid(el) {
 	}
 }
 
-
+function onLoadingClick(e) {    // 로딩바가 돌때 클릭 막기
+    e.stopPropagation();
+    e.preventDefault();
+}
 
 /*************** event init *****************/
 auth.onAuthStateChanged(onAuthChanged);
@@ -203,10 +224,11 @@ writeForm.title.addEventListener('keyup', onRequiredValid);
 writeForm.writer.addEventListener('keyup', onRequiredValid);
 writeForm.writer.addEventListener('blur', onRequiredValid);
 writeForm.upfile.addEventListener('change', onUpfileChange);
+loading.addEventListener('click', onLoadingClick);
 
-db.on('child_added', onAdded);
-db.on('child_changed', onChanged);
-db.on('child_removed', onRemoved);
+//db.on('child_added', onAdded);
+// db.on('child_changed', onChanged);
+// db.on('child_removed', onRemoved);
 
 /*************** start init *****************/
 
