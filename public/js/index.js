@@ -19,13 +19,16 @@ var firebaseStorage = firebase.storage();
 var db = firebaseDatabase.ref('root/board');
 var storage = firebaseStorage.ref('root/board');
 var user = null;
+var allowExt = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4']
 
 
 /*************** element init *****************/
 var btSave = document.querySelector('.write-wrapper .bt-save');      // 글작성
 var btLogin = document.querySelector('.header-wrapper .bt-login');   // 로긴버튼
 var btLogout = document.querySelector('.header-wrapper .bt-logout'); // 로그아웃 버튼
-var btWrite = document.querySelector('.list-wrapper .bt-write');     // 글쓰기 버튼
+var btWrite = document.querySelector('.list-wrapper .bt-write');     // 글작성 모달창 오픈버튼
+var btClose = document.querySelector('.write-wrapper .bt-close');     // 글작성 모달창 클로즈버튼
+var btReset = document.querySelector('.write-wrapper .bt-reset');     // 글작성 모달창 리셋버튼
 var writeWrapper = document.querySelector('.write-wrapper');         // 글작성 모달창
 var writeForm = document.writeForm;                                  // 글작성 form , 'form'만 name명 으로 접근가능
 
@@ -59,51 +62,89 @@ function onWrite() {    // 모달창이 오픈 되면.
     writeForm.title.focus();
 }
 
+function onClose() {    // 모달창이 닫히면
+    $(writeWrapper).stop().fadeOut(300);
+    onWriteReset();
+    
+}
+
+function onWriteReset(e) {  // form을 원상태로 돌리기
+    writeForm.title.value = '';
+    writeForm.title.classList.remove('active');
+    writeForm.writer.value = '';
+    writeForm.writer.classList.remove('active');
+    writeForm.content.value = '';
+    document.querySelectorAll('.required-comment').forEach(function(v, i) {
+        v.classList.remove('active');
+    });
+}
+
 function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검증
     e.preventDefault();
-    var title = writeForm.title.value.trim();
-    var writer = writeForm.write.value.trim();
+    var title = writeForm.title;
+    var writer = writeForm.writer;
     var upfile = writeForm.upfile.files;
     var content = writeForm.content.value.trim();
-    if(title === '') {
-
+    if(!requiredValid(title)) {
+        title.focus();
+        return false;
     }
-    if(writer === '') {
-
+    if(!requiredValid(writer)) {
+        writer.focus();
+        return false;
     }
 }
 
 function onRequiredValid(e) {  // title, writer에서 blur되거나 keyup되면
-    var el = e.target;
-    var next = $(e.target).next()[0];    // js: e.target.nextSibling 공백 까지 찾는다..
+    //var el = this; //e.target;
+    requiredValid(this)
+}
+
+function requiredValid(el) {    // 입력하지 않으면 하단에 required-comment 나타남
+    var next = $(el).next()[0];    // js: e.target.nextSibling 공백 까지 찾는다..
     if(el.value.trim() === '') {
         el.classList.add('active');
-        next.style.display = 'block';
+        next.classList.add('active');
         return false;
     }
     else {
         el.classList.remove('active');
-        next.style.display = 'none';
+        next.classList.remove('active');
         return true;
     }
 }
 
 
-function onUpfileBlur(e) {
-
+function onUpfileChange(e) {    // upfile에서 change 되면
+    var next = $(el).next()[0];
+    if(this.files.length > 0 && (allowType.indexOf(this.files[0].type) === -1)) {
+        el.classList.add('active');
+        next.classList.add('active');
+        return ture;
+    }
+    else {
+        el.classList.remove('active');
+        next.classList.remove('active');
+        return true;
+    }
 }
+    console.log(this.files);
+    console.log(this.files[0]);
+
 
 /*************** event init *****************/
 auth.onAuthStateChanged(onAuthChanged);
 btLogin.addEventListener('click', onLogin);
 btLogout.addEventListener('click', onLogout);
 btWrite.addEventListener('click', onWrite);
+btClose.addEventListener('click', onClose);
+btReset.addEventListener('click', onWriteReset);
 writeForm.addEventListener('submit', onWriteSubmit);
 writeForm.title.addEventListener('blur', onRequiredValid);
 writeForm.title.addEventListener('keyup', onRequiredValid);
 writeForm.writer.addEventListener('keyup', onRequiredValid);
 writeForm.writer.addEventListener('blur', onRequiredValid);
-writeForm.upfile.addEventListener('blur', onUpfileBlur);
+writeForm.upfile.addEventListener('change', onUpfileChange);
 
 
 /*************** start init *****************/
