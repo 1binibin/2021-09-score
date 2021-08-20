@@ -74,7 +74,7 @@ function onLogout() {   //btLogout이 클릭되면
 
 function onWrite() {    // 모달창이 오픈 되면.
     loading.style.display = 'none';
-    $(writeWrapper).stop().fadeIn(300);
+    $(writeWrapper).stop().fadeIn(300); //javascript론 까다로워서 jQuery 사용
     writeForm.title.focus();
 }
 
@@ -157,7 +157,7 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
         data.file.path = r;
         db.push(data).key;
         onClose();
-    }
+    } 
 
     function onError(err) {
         alert('파일 가져오기에 실패 하였습니다. 다시 시도해 주세요.');
