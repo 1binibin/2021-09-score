@@ -21,8 +21,6 @@ db.push().key       // 데이터 저장
 db.set({})          // 데이터 수정
 db.remove()         // 데이터 삭제
 db.get()            // 데이터 가져오기
-
-
 */
 
 /*************** global init *****************/
@@ -48,14 +46,12 @@ var btReset = document.querySelector('.write-wrapper .bt-reset');    // 글작�
 var writeWrapper = document.querySelector('.write-wrapper');         // 글작성 모달창
 var writeForm = document.writeForm;                                  // 글작성 form , 'form'만 name명 으로 접근가능
 var loading = document.querySelector('.write-wrapper .loading-wrap');   // 파일 업로드 로딩바
-var observeEl = document.querySelector('.observer-el');
 var tbody = document.querySelector('.list-tbl tbody');
+var tr;
 
-var page = 1;
-var listCnt = 3;
-var pagerCnt = 3;
-var totalRecord = 0;
-var observer = new IntersectionObserver(onObserver, {} );
+var observer;       //Intersection observer의 Instance
+var listCnt = 5;    // 데이터를 한번에 불러올 갯수
+
 /*************** user function  *****************/
 function listInit() {
     tbody.innerHTML = '';
@@ -77,7 +73,9 @@ function setHTML(k, v) {
     html += '<td>0</td>';
     html += '</tr>';
     tbody.innerHTML += html;
+    tr = tbody.querySelectorAll('tr');
     // console.log('setHTML', v);
+    observer.observe(tr[tr.length - 1]);
     sortTr();
 }
 
@@ -94,13 +92,11 @@ function onObserver(el, observer) {
         console.log(v.isIntersecting);
         if(v.isIntersecting) {
             var tr = tbody.querySelectorAll('tr');
-            if(tr.length > 0) {
-                var last = Number(tr[tr.length - 1].dataset['idx']);
-                ref.startAfter(last).limitToFirst(listCnt).get().then(onGetData).catch(onGetError);
-            }
-            else {
-                ref.limitToFirst(listCnt).get().then(onGetData).catch(onGetError);
-            }
+            var last = Number(tr[tr.length - 1].dataset['idx']);
+            ref.startAfter(last).limitToFirst(listCnt).get().then(onGetData).catch(onGetError);
+            // observer.observe(lastTr);
+            observer.unobserve(v.target);
+            
         }
     });
 }
@@ -316,5 +312,5 @@ loading.addEventListener('click', onLoadingClick);
 // db.on('child_removed', onRemoved);
 
 /*************** start init *****************/
-// listInit();
-observer.observe(observeEl);
+observer = new IntersectionObserver(onObserver, {root: null, rootMargin: '-100px'} );
+listInit();
