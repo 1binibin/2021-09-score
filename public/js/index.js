@@ -1,4 +1,6 @@
 /* 
+$().method().method //$()가 리턴값의 .method를 가지고있고 또 메서드를 가지고 있어야 체인닝이 됨
+
 $().next()      // 내 바로 다음     - JS: nextSibling
 $().prev()      // 내 바로 전       - JS: previousSibling
 $().parent()    // 내 부모          - JS: parentNode
@@ -47,7 +49,7 @@ var writeWrapper = document.querySelector('.write-wrapper');         // 글작�
 var writeForm = document.writeForm;                                  // 글작성 form , 'form'만 name명 으로 접근가능
 var loading = document.querySelector('.write-wrapper .loading-wrap');   // 파일 업로드 로딩바
 var tbody = document.querySelector('.list-tbl tbody');
-var recent = document.querySelector('recent-wrapper .list-wp');
+var recent = document.querySelector('.recent-wrapper .list-wp');
 var tr;
 
 var observer;       //Intersection observer의 Instance
@@ -63,9 +65,8 @@ function listInit() {   // 처음, 데이터를 생성할때 한번씩
         .catch(onGetError);
 }
 
-function recentInit() {
+function recentInit(ref) {
     ref
-        // .startAfter()
         .limitToFirst(1)
         .get()
         .then(onGetRecent)
@@ -94,14 +95,10 @@ function setHTML(k, v) {    //데이터 넣을때
 }
 
 function setRecentHTML(k, v) {
-    if(v.upfile && v.upfile.file.type !== exts[3]){
-        var html = '<li class="list" style="background-image: url(\''+v.upfile.path+'\');">';
+        var html = '<li class="list" data-idx="'+v.idx+'" style="background-image: url(\''+v.upfile.path+'\');">';
         html += '<div class="ratio"></div>';
         html += '</li>';
         recent.innerHTML += html;
-    }
-    var len = recent.querySelectorAll('li').length;
-    if(len < 5) recentInit();
 }
 
 function sortTr() {
@@ -114,7 +111,7 @@ function sortTr() {
 /*************** event callback *****************/
 function onObserver(el, observer) {
     el.forEach(function(v) {
-        console.log(v.isIntersecting);
+        //console.log(v.isIntersecting);
         if(v.isIntersecting) {
             var tr = tbody.querySelectorAll('tr');
             var last = Number(tr[tr.length - 1].dataset['idx']);
@@ -133,10 +130,29 @@ function onGetData(r) {
     });
 }
 
+
+
 function onGetRecent(r) {
-    r.forEach(function(v, i) {
-        if(v && v.key ) setRecentHTML(v.key, v.val());
-    });
+    if(r.numChildren() > 0){  //  데이터가 존재함
+        r.forEach(function(v, i) {
+            
+            var isImg = v.val().upfile && v.val().upfile.file.type !== allowType[3];    //upfile이 이미지인 경우.
+            if(isImg) setRecentHTML(v.key, v.val());
+            var li = recent.querySelectorAll('li');
+            var cnt = li.length;
+            var last = cnt -1;
+            if(last < 6) {   //list가 6개 미만인지
+                //console.log('찾는중');
+                recentInit(ref.startAfter(v.val().idx));
+            }
+            else {
+                console.log('완료');
+            }
+        });
+    }
+    else { // 데이터가 존재하지 않음
+        console.log('완료');
+    }
 }
 
 function onGetError(err) {
@@ -195,6 +211,7 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
 	var writer = writeForm.writer;
 	var upfile = writeForm.upfile;
 	var content = writeForm.content;
+    var upload;
 	if(!user) {
         alert('로그인 후 이용하세요.')
         return false;
@@ -345,4 +362,20 @@ loading.addEventListener('click', onLoadingClick);
 /*************** start init *****************/
 observer = new IntersectionObserver(onObserver, {root: null, rootMargin: '-100px'} );
 listInit();
-recentInit();
+recentInit(ref);
+
+
+/* var isImg = v.val().upfile && v.val().upfile.file.type !== allowType[3];    //upfile이 이미지인 경우.
+            if(isImg) setRecentHTML(v.key, v.val());
+            else {  // 이미지가 아니면
+                if(!recent.querySelector('li')) {
+                    var li = recent.querySelectorAll('li');
+                    var idx = li[li.length - 1].dataset['idx'];
+                    recentInit(ref.startAfter(idx));
+                }
+                else {
+
+                    recentInit(ref);
+                }
+            }
+ */
