@@ -34,7 +34,8 @@ var db = firebaseDatabase.ref('root/board');   // sort를 기준으로 가져옴
 var ref = db.orderByChild('idx')   
 var storage = firebaseStorage.ref('root/board');
 var user = null;
-var allowType = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4']
+var allowType = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
+var exts = ['../img/jpg.png', '../img/png.png', '../img/gif.png', '../img/video.png'];
 
 
 /*************** element init *****************/
@@ -62,16 +63,23 @@ function setHTML(k, v) {
     var n = tbody.querySelectorAll('tr').length + 1;
     var html = '<tr data-idx="'+v.idx+'" data-key="'+k+'">';
     html += '<td>'+n+'</td>';
-    html += '<td><img src="../img/png.png" class="icon"> 좌석간 거리두기</td>';
-    html += '<td>홍길동</td>';
-    html += '<td>2021-08-19</td>';
-    html += '<td>3</td>';
-    html += '</tr>'
+    html += '<td>';
+    if(v.upfile){
+        html += '<img src="'+exts[allowType.indexOf(v.upfile.file.type)]+'" class="icon">';
+    }
+    html += v.title;
+    html += '</td>';
+    html += '<td>'+v.writer+'</td>';
+    html += '<td>'+moment(v.createdAt).format('YYYY-MM-DD')+'</td>';
+    html += '<td>0</td>';
+    html += '</tr>';
+    tbody.innerHTML += html;
 }
 
 /*************** event callback *****************/
 function onGetData(r) {
     r.forEach(function(v, i) {
+        console.log(v.key);
     setHTML(v.key, v.val());
     });
 }
