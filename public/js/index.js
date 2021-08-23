@@ -30,7 +30,8 @@ var auth = firebase.auth();
 var googleAuth = new firebase.auth.GoogleAuthProvider();
 var firebaseDatabase = firebase.database();
 var firebaseStorage = firebase.storage();
-var db = firebaseDatabase.ref('root/board');
+var db = firebaseDatabase.ref('root/board');   // sort를 기준으로 가져옴.
+var ref = db.orderByChild('idx')   
 var storage = firebaseStorage.ref('root/board');
 var user = null;
 var allowType = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4']
@@ -46,17 +47,39 @@ var btReset = document.querySelector('.write-wrapper .bt-reset');    // 글작�
 var writeWrapper = document.querySelector('.write-wrapper');         // 글작성 모달창
 var writeForm = document.writeForm;                                  // 글작성 form , 'form'만 name명 으로 접근가능
 var loading = document.querySelector('.write-wrapper .loading-wrap');   // 파일 업로드 로딩바
+var tbody = document.querySelector('.list-tbl tbody');
 
 var page = 1;
-var listCnt = 5;
+var listCnt = 3;
 var pagerCnt = 3;
-
+var totalRecord = 0;
 /*************** user function  *****************/
 function listInit() {
-    db.once().then().catch();
+    ref.limitToFirst(listCnt).get().then(onGetData).catch(onGetError);
+}
+
+function setHTML(k, v) {
+    var n = tbody.querySelectorAll('tr').length + 1;
+    var html = '<tr data-idx="'+v.idx+'" data-key="'+k+'">';
+    html += '<td>'+n+'</td>';
+    html += '<td><img src="../img/png.png" class="icon"> 좌석간 거리두기</td>';
+    html += '<td>홍길동</td>';
+    html += '<td>2021-08-19</td>';
+    html += '<td>3</td>';
+    html += '</tr>'
 }
 
 /*************** event callback *****************/
+function onGetData(r) {
+    r.forEach(function(v, i) {
+    setHTML(v.key, v.val());
+    });
+}
+
+function onGetError(err) {
+    console.log(err);
+}
+
 // onAuthStateChanged 
 function onAuthChanged(r) { // login, logout 상태가 변하면..
     user = r;
@@ -129,18 +152,34 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
     data.writer = writer.value;
     data.content = content.value;
     data.createAt = new Date().getTime();
-    if(upfile.files.length) {       // 파일이 존재하면 처리 로직
-        var upload = null;
-        var file =upfile.files[0];
-        var savename = genFile();
-        var uploader = storage.child(savename.folder).child(savename.file).put(file);
-        uploader.on('state_changed', onUploading, onUploadError, onUploaded)
-        data.file = { folder: 'root/board/'+savename.folder, name: savename.file};
+    db.limitToLast(1).get().then(getLastIdx).catch(onGetError);
+    function getLastIdx(r) {
+        if(r.numChildren() === 0){
+            data.idx = 99999999;
+        }
+        else {
+            r.forEach(function(v) {
+            data.idx = Number(v.val().idx) - 1;
+            });
+        }
+
+        if(upfile.files.length) {       // 파일이 존재하면 처리 로직
+            var file = {
+                name: upfile.files[0].name,
+                size: upfile.files[0].size,
+                type: upfile.files[0].type
+            }
+            var savename = genFile();
+            var uploader = storage.child(savename.folder).child(savename.file).put(file);
+            uploader.on('state_changed', onUploading, onUploadError, onUploaded);
+            data.upfile = { folder: 'root/board/'+savename.folder, name: savename.file, file: file };
+        }
+        else {
+            db.push(data).key; // firebase저장
+            onClose();
+        }
     }
-    else {
-        db.push(data).key; // firebase저장
-        onClose();
-    }
+    
 
     function onUploading(snapshot) { // 파일이 업로드 되는 동안
         loading.style.display = 'flex';
@@ -162,7 +201,7 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
     }
 
     function onSuccess(r) { // r: 실제 웹으로 접근 가능한 경로
-        data.file.path = r;
+        data.upfile.path = r;
         db.push(data).key;
         onClose();
     } 
