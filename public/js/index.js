@@ -47,18 +47,32 @@ var writeWrapper = document.querySelector('.write-wrapper');         // 글작�
 var writeForm = document.writeForm;                                  // 글작성 form , 'form'만 name명 으로 접근가능
 var loading = document.querySelector('.write-wrapper .loading-wrap');   // 파일 업로드 로딩바
 var tbody = document.querySelector('.list-tbl tbody');
+var recent = document.querySelector('recent-wrapper .list-wp');
 var tr;
 
 var observer;       //Intersection observer의 Instance
 var listCnt = 5;    // 데이터를 한번에 불러올 갯수
 
 /*************** user function  *****************/
-function listInit() {
+function listInit() {   // 처음, 데이터를 생성할때 한번씩
     tbody.innerHTML = '';
-    ref.limitToFirst(listCnt).get().then(onGetData).catch(onGetError);
+    ref
+        .limitToFirst(listCnt)
+        .get()
+        .then(onGetData)
+        .catch(onGetError);
 }
 
-function setHTML(k, v) {
+function recentInit() {
+    ref
+        // .startAfter()
+        .limitToFirst(1)
+        .get()
+        .then(onGetRecent)
+        .catch(onGetError);
+}
+
+function setHTML(k, v) {    //데이터 넣을때
     var n = tbody.querySelectorAll('tr').length + 1;
     var html = '<tr data-idx="'+v.idx+'" data-key="'+k+'">';
     html += '<td>'+n+'</td>';
@@ -77,6 +91,17 @@ function setHTML(k, v) {
     // console.log('setHTML', v);
     observer.observe(tr[tr.length - 1]);
     sortTr();
+}
+
+function setRecentHTML(k, v) {
+    if(v.upfile && v.upfile.file.type !== exts[3]){
+        var html = '<li class="list" style="background-image: url(\''+v.upfile.path+'\');">';
+        html += '<div class="ratio"></div>';
+        html += '</li>';
+        recent.innerHTML += html;
+    }
+    var len = recent.querySelectorAll('li').length;
+    if(len < 5) recentInit();
 }
 
 function sortTr() {
@@ -104,7 +129,13 @@ function onObserver(el, observer) {
 function onGetData(r) {
     r.forEach(function(v, i) {
     // console.log(v.key);
-    setHTML(v.key, v.val());
+        setHTML(v.key, v.val());
+    });
+}
+
+function onGetRecent(r) {
+    r.forEach(function(v, i) {
+        if(v && v.key ) setRecentHTML(v.key, v.val());
     });
 }
 
@@ -314,3 +345,4 @@ loading.addEventListener('click', onLoadingClick);
 /*************** start init *****************/
 observer = new IntersectionObserver(onObserver, {root: null, rootMargin: '-100px'} );
 listInit();
+recentInit();
