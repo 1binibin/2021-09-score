@@ -59,7 +59,7 @@ var listCnt = 5;    // 데이터를 한번에 불러올 갯수
 
 /*************** user function  *****************/
 function goView(k) {
-    // location.href = './view.html?key='+k;
+    // location.href = './view.html?key='+k;    html은 변수를 받지못한다. key만 전달함.
     listWrapper.style.display = 'none';
     viewWrapper.style.display = 'block';
     db
@@ -122,9 +122,9 @@ function sortTr() {
 }
 
 /*************** event callback *****************/
-function onGetView(r) {
+function onGetView(r) { // 사진이나 글을 클릭하면 생기는 페이지
     console.log(r.key, r.val());
-    viewWrapper.innerHTML = r.val().title;
+    viewWrapper.innerHTML = r.val().title;  //title을 보여줌.
 }
 
 function onObserver(el, observer) {
