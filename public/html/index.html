@@ -31,6 +31,7 @@
     <script src="../js/moment.min.js"></script>
     <script src="../js/lodash.min.js"></script>
     <script src="../js/uuidv4.min.js"></script>
+    <script src="../js/promise.polyfill.min.js"></script>
     <script src="../js/util.js"></script>
 </head>
 <body>
@@ -152,7 +153,7 @@
                 </ul>
             </div>
             <div class="text-center py-3">
-                <button class="bt-write btn btn-success" onclick="$('.write-wrapper').stop().fadeIn(300);">글작성</button>
+                <button class="bt-write btn btn-success" onclick="$('.write-wrapper').stop().fadeIn(300);" style="display: none;">글작성</button>
             </div>
         </section>
     </div>

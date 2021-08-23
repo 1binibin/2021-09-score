@@ -47,8 +47,14 @@ var writeWrapper = document.querySelector('.write-wrapper');         // 글작�
 var writeForm = document.writeForm;                                  // 글작성 form , 'form'만 name명 으로 접근가능
 var loading = document.querySelector('.write-wrapper .loading-wrap');   // 파일 업로드 로딩바
 
-/*************** user function  *****************/
+var page = 1;
+var listCnt = 5;
+var pagerCnt = 3;
 
+/*************** user function  *****************/
+function listInit() {
+    db.once().then().catch();
+}
 
 /*************** event callback *****************/
 // onAuthStateChanged 
@@ -57,10 +63,12 @@ function onAuthChanged(r) { // login, logout 상태가 변하면..
     if(user) {  // 로그인 되면 UI가 할일
         btLogin.style.display = 'none';
         btLogout.style.display = 'block';
+        btWrite.style.display = 'inline-block';
     }
     else {  // 로그아웃 되면 UI가 할일
         btLogin.style.display = 'block';
         btLogout.style.display = 'none';
+        btWrite.style.display = 'none';
     }
 }
 
@@ -227,9 +235,11 @@ writeForm.writer.addEventListener('blur', onRequiredValid);
 writeForm.upfile.addEventListener('change', onUpfileChange);
 loading.addEventListener('click', onLoadingClick);
 
+
 //db.on('child_added', onAdded);
 // db.on('child_changed', onChanged);
 // db.on('child_removed', onRemoved);
 
 /*************** start init *****************/
+listInit();
 
