@@ -74,6 +74,14 @@ function setHTML(k, v) {
     html += '<td>0</td>';
     html += '</tr>';
     tbody.innerHTML += html;
+    sortTr();
+}
+
+function sortTr() {
+    var total = tbody.querySelectorAll('tr').length;
+    tbody.querySelectorAll('tr').forEach(function(v, i) {
+        v.querySelector('td').innerHTML = total -i;
+    });
 }
 
 /*************** event callback *****************/
