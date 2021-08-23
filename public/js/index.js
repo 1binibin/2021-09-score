@@ -50,12 +50,25 @@ var writeForm = document.writeForm;                                  // 글작�
 var loading = document.querySelector('.write-wrapper .loading-wrap');   // 파일 업로드 로딩바
 var tbody = document.querySelector('.list-tbl tbody');
 var recent = document.querySelector('.recent-wrapper .list-wp');
+var listWrapper = document.querySelector('.list-wrapper');
+var viewWrapper = document.querySelector('.view-wrapper');
 var tr;
 
 var observer;       //Intersection observer의 Instance
 var listCnt = 5;    // 데이터를 한번에 불러올 갯수
 
 /*************** user function  *****************/
+function goView(k) {
+    // location.href = './view.html?key='+k;
+    listWrapper.style.display = 'none';
+    viewWrapper.style.display = 'block';
+    db
+    .child(k)
+    .get()
+    .then(onGetView)
+    .catch(onGetError);
+}
+
 function listInit() {   // 처음, 데이터를 생성할때 한번씩
     tbody.innerHTML = '';
     ref
@@ -77,7 +90,7 @@ function setHTML(k, v) {    //데이터 넣을때
     var n = tbody.querySelectorAll('tr').length + 1;
     var html = '<tr data-idx="'+v.idx+'" data-key="'+k+'">';
     html += '<td>'+n+'</td>';
-    html += '<td>';
+    html += '<td  onclick="goView(\''+k+'\');">';
     if(v.upfile){
         html += '<img src="'+exts[allowType.indexOf(v.upfile.file.type)]+'" class="icon">';
     }
@@ -95,10 +108,10 @@ function setHTML(k, v) {    //데이터 넣을때
 }
 
 function setRecentHTML(k, v) {
-        var html = '<li class="list" data-idx="'+v.idx+'" style="background-image: url(\''+v.upfile.path+'\');">';
-        html += '<div class="ratio"></div>';
-        html += '</li>';
-        recent.innerHTML += html;
+    var html = '<li class="list" data-idx="'+v.idx+'" style="background-image: url(\''+v.upfile.path+'\');">';
+    html += '<div class="ratio"></div>';
+    html += '</li>';
+    recent.innerHTML += html;
 }
 
 function sortTr() {
@@ -109,6 +122,11 @@ function sortTr() {
 }
 
 /*************** event callback *****************/
+function onGetView(r) {
+    console.log(r.key, r.val());
+    viewWrapper.innerHTML = r.val().title;
+}
+
 function onObserver(el, observer) {
     el.forEach(function(v) {
         //console.log(v.isIntersecting);
@@ -137,21 +155,20 @@ function onGetRecent(r) {
         r.forEach(function(v, i) {
             
             var isImg = v.val().upfile && v.val().upfile.file.type !== allowType[3];    //upfile이 이미지인 경우.
-            if(isImg) setRecentHTML(v.key, v.val());
+            if(isImg)   {
+                var html = '<li class="list" data-idx="'+v.val().idx+'" style="background-image: url(\''+v.val().upfile.path+'\');" onclick="goView(\''+v.key+'\');">';
+                html += '<div class="ratio"></div>';
+                html += '</li>';
+                recent.innerHTML += html;
+            }
             var li = recent.querySelectorAll('li');
             var cnt = li.length;
             var last = cnt -1;
-            if(last < 6) {   //list가 6개 미만인지
+            if(last < 5) {   //list가 6개 미만인지
                 //console.log('찾는중');
                 recentInit(ref.startAfter(v.val().idx));
             }
-            else {
-                console.log('완료');
-            }
         });
-    }
-    else { // 데이터가 존재하지 않음
-        console.log('완료');
     }
 }
 
@@ -248,7 +265,7 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
                 type: upfile.files[0].type
             }
             var savename = genFile();
-            var uploader = storage.child(savename.folder).child(savename.file).put(file);
+            var uploader = storage.child(savename.folder).child(savename.file).put(upfile.files[0]);
             uploader.on('state_changed', onUploading, onUploadError, onUploaded);
             data.upfile = { folder: 'root/board/'+savename.folder, name: savename.file, file: file };
         }
@@ -256,6 +273,8 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
             db.push(data).key; // firebase저장
             onClose();
             listInit();
+            recent.innerHTML = '';
+            recentInit(ref);
         }
     }
     
@@ -284,6 +303,8 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
         db.push(data).key;
         onClose();
         listInit();
+        recent.innerHTML = '';
+        recentInit(ref);
     } 
 
     function onError(err) {
@@ -362,6 +383,7 @@ loading.addEventListener('click', onLoadingClick);
 /*************** start init *****************/
 observer = new IntersectionObserver(onObserver, {root: null, rootMargin: '-100px'} );
 listInit();
+recent.innerHTML = '';
 recentInit(ref);
 
 
