@@ -80,7 +80,7 @@ function viewShow(el) {
     }
 }
 
-function goView(k, el) {
+function goView(k) {
     // location.href = './view.html?key='+k;    html은 변수를 받지못한다. key만 전달함.
     viewShow('VIEW');
     db
@@ -129,7 +129,7 @@ function setHTML(k, v) {    //데이터 넣을때
     var n = tbody.querySelectorAll('tr').length + 1;
     var html = '<tr data-idx="'+v.idx+'" data-key="'+k+'">';
     html += '<td>'+n+'</td>';
-    html += '<td  onclick="goView(\''+k+'\', this);">';
+    html += '<td  onclick="goView(\''+k+'\');">';
     if(v.upfile){
         html += '<img src="'+exts[allowType.indexOf(v.upfile.file.type)]+'" class="icon">';
     }
@@ -232,7 +232,7 @@ function onGetRecent(r) {
             
             var isImg = v.val().upfile && v.val().upfile.file.type !== allowType[3];    //upfile이 이미지인 경우.
             if(isImg)   {
-                var html = '<li class="list" data-key="'+v.key+'" data-idx="'+v.val().idx+'" style="background-image: url(\''+v.val().upfile.path+'\');" onclick="goView(\''+v.key+'\', this);">';
+                var html = '<li class="list" data-key="'+v.key+'" data-idx="'+v.val().idx+'" style="background-image: url(\''+v.val().upfile.path+'\');" onclick="goView(\''+v.key+'\');">';
                 html += '<div class="ratio"></div>';
                 html += '</li>';
                 recent.innerHTML += html;
