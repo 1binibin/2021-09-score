@@ -52,16 +52,36 @@ var tbody = document.querySelector('.list-tbl tbody');
 var recent = document.querySelector('.recent-wrapper .list-wp');
 var listWrapper = document.querySelector('.list-wrapper');
 var viewWrapper = document.querySelector('.view-wrapper');
+var updateWrapper = document.querySelector('.update-wrapper');
 var tr;
 
 var observer;       //Intersection observer의 Instance
 var listCnt = 5;    // 데이터를 한번에 불러올 갯수
 
 /*************** user function  *****************/
+function viewShow(el) {
+    switch(el){
+        case 'LIST':
+            listWrapper.style.display = 'block';
+            viewWrapper.style.display = 'none';
+            updateWrapper.style.display = 'none';
+            break;
+        case 'VIEW':
+        listWrapper.style.display = 'none';
+        viewWrapper.style.display = 'block';
+        updateWrapper.style.display = 'block';
+            break;
+        case 'UPDATE':
+            listWrapper.style.display = 'none';
+            viewWrapper.style.display = 'none';
+            updateWrapper.style.display = 'block';
+            break;
+    }
+}
+
 function goView(k) {
     // location.href = './view.html?key='+k;    html은 변수를 받지못한다. key만 전달함.
-    listWrapper.style.display = 'none';
-    viewWrapper.style.display = 'block';
+    viewShow('VIEW');
     db
     .child(k)
     .get()
@@ -124,7 +144,11 @@ function sortTr() {
 /*************** event callback *****************/
 function onGetView(r) { // 사진이나 글을 클릭하면 생기는 페이지
     console.log(r.key, r.val());
-    viewWrapper.innerHTML = r.val().title;  //title을 보여줌.
+    viewWrapper.querySelector('.title-wrap .content').innerHTML = r.val().title;  //title을 보여줌.
+    viewWrapper.querySelector('.writer-wrap .content').innerHTML = r.val().writer;  
+    viewWrapper.querySelector('.datetime-wrap .content').innerHTML = moment(r.val().createAt).format('YYYY-MM-DD HH:mm:ss');  
+    viewWrapper.querySelector('.readnum-wrap .content').innerHTML = r.val().readcnt || 0;  
+    viewWrapper.querySelector('.content-wrap').innerHTML = r.val().content || '';  
 }
 
 function onObserver(el, observer) {
@@ -247,6 +271,7 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
     data.writer = writer.value;
     data.content = content.value;
     data.createAt = new Date().getTime();
+    data.readcnt = 0;
     db.limitToLast(1).get().then(getLastIdx).catch(onGetError);
     function getLastIdx(r) {
         if(r.numChildren() === 0){

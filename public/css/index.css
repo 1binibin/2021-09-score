@@ -41,6 +41,16 @@ body > .gnb {min-height: calc(100vh - 131px);}
 .list-wrapper .page-link {color: #333; cursor: pointer; user-select: none;}
 .list-wrapper .page-item.active .page-link {background-color: #348345; border-color: #348345;}
 .pager-wrap .material-icons { transform: translateY(2px);}
+
+
+/********************** view-wrapper *********************/
+.view-wrapper {padding: 2em;}
+.view-wrapper h3 {display: flex; align-items: flex-start; padding-left: .5em;}
+.view-wrapper h3 .title {padding: 1em 0; min-width: 120px; font-weight: bold;}
+.view-wrapper h3 .content {padding: 1em 0; flex-grow: 1; border-bottom: 1px solid #dedede;}
+.view-wrapper .content-wrap {padding: 1em; line-height: 1.2; border: 1px solid #dedede; margin: 1.5em 0;}
+
+
 /********************** footer-wrapper *********************/
 .footer-wrapper {padding: 2em 1em; text-align: center; background-color: #343a40; color: #fff;}
 .footer-wrapper .link-wrap {font-size: 1.5em; margin-bottom: 1em;}
