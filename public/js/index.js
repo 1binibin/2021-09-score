@@ -219,10 +219,16 @@ function onDelete(e) {
     if(confirm('정말로 삭제하시겠습니까?')) {
         db.child(key).once('value', function(v) {
             if(user && v.val().user === user.uid){
-                if(v.val().upfile) removeFile(v.val().upfile.name, key, function() {
+                if(v.val().upfile){
+                    removeFile(v.val().upfile.name, key, function() {
+                        db.child(key).remove();
+                        viewShow('LIST');
+                    });
+                }
+                else {
                     db.child(key).remove();
-                    viewShow('LIST');
-                } )
+                        viewShow('LIST');
+                }
             }
             else {
                 alert('권한이 없습니다.');
@@ -363,7 +369,7 @@ function onWrite(e, key) {    // 모달창이 오픈 되면.
     loading.style.display = 'none';
     $(writeWrapper).stop().fadeIn(300); //javascript론 까다로워서 jQuery 사용
     writeForm.key.value = '';
-    writeTitle.innerHTML = '게시글 작성';
+    writeTitle.innerHTML = '게시글 작성'; 
     btSave.innerHTML = '글쓰기';
     oldFile.style.display = 'none';
     writeForm.title.focus();
@@ -374,18 +380,18 @@ function onWrite(e, key) {    // 모달창이 오픈 되면.
         writeForm.title.value = r.val().title;
         writeForm.writer.value = r.val().writer;
         writeForm.content.value = r.val().content;
-        writeTitle.innerHTML = '게시글 수정';
-        btSave.innerHTML = '수정하기';
+        writeTitle.innerHTML = '게시글 수정';   // 게시글 클릭하고 들어가서 수정버튼 누르면 title 이름 바꿈
+        btSave.innerHTML = '수정하기';          // 글쓰기 버튼을 수정하기 버튼으로 바꿈.
         if(r.val().upfile) {
-            oldFile.style.display = 'flex';
+            oldFile.style.display = 'flex';     // 기존 파일이 있으면 파일 타입의 이미지.
             var isImg = r.val().upfile && r.val().upfile.file.type !== allowType[3]
-            deleteFile.dataset['key'] = r.key;
-            oldFile.querySelector('.filename').innerHTML = r.val().upfile.file.name;
-            if(isImg) {
+            deleteFile.dataset['key'] = r.key;  //data-key 값을 부여함.
+            oldFile.querySelector('.filename').innerHTML = r.val().upfile.file.name;    // 파일 이름 보여줌.
+            if(isImg) { // 이미지라면 기존파일의 썸네일 사진.
                 thumbFile.src = r.val().upfile.path;
                 thumbFile.classList.remove('video');
             }
-            else {
+            else {  // 동영상 파일일 경우 video.png
                 thumbFile.src = '../img/video.png';
                 thumbFile.classList.add('video');
             }
@@ -393,7 +399,7 @@ function onWrite(e, key) {    // 모달창이 오픈 되면.
     }
 }
 
-function onDeleteFile(e) {  // html에 onclick는 event를 받지 못한다.
+function onDeleteFile(e) {  // html에 onclick는 인자로 event를 받지 못한다.
     if(confirm('첨부파일을 삭제하시겠습니까?')){
         var key = this.dataset['key'];
         db.child(key).once('value', function(r) {
@@ -441,7 +447,7 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
 	if(!upfileValid(upfile)) {
 		return false;
 	}
-	// firebase save
+	// firebase save, 수정 할때 필요한 값.
     data.title = title.value;
     data.writer = writer.value;
     data.content = content.value;
@@ -450,7 +456,7 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
         db.child(key).once('value', onGetData);
         function onGetData(r) {
             if(upfile.files.length) {
-                if(r.val().upfile) removeFile(r.val().upfile.name, key, saveFile);
+                if(r.val().upfile) removeFile(r.val().upfile.name, key, saveFile);  // 기존 파일이 있다면 지우고 saveFile
                 else saveFile();
             }
             else saveAfter();
