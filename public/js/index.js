@@ -80,7 +80,7 @@ function viewShow(el) {
     }
 }
 
-function goView(k) {
+function goView(k, el) {
     // location.href = './view.html?key='+k;    html은 변수를 받지못한다. key만 전달함.
     viewShow('VIEW');
     db
@@ -88,6 +88,16 @@ function goView(k) {
     .get()
     .then(onGetView)
     .catch(onGetError);
+    var nextKey = null;
+    var prevKey = null;
+    if(el.tagName === 'TD') {
+        nextKey = $(el).parent().prev().data('key');
+        prevKey = $(el).parent().next().data('key');
+    }
+    else {
+        nextKey = $(el).prev().data('key');
+        prevKey = $(el).next().data('key');
+    }
 }
 
 function listInit() {   // 처음, 데이터를 생성할때 한번씩
@@ -111,7 +121,7 @@ function setHTML(k, v) {    //데이터 넣을때
     var n = tbody.querySelectorAll('tr').length + 1;
     var html = '<tr data-idx="'+v.idx+'" data-key="'+k+'">';
     html += '<td>'+n+'</td>';
-    html += '<td  onclick="goView(\''+k+'\');">';
+    html += '<td  onclick="goView(\''+k+'\', this);">';
     if(v.upfile){
         html += '<img src="'+exts[allowType.indexOf(v.upfile.file.type)]+'" class="icon">';
     }
@@ -144,7 +154,7 @@ function sortTr() {
 
 /*************** event callback *****************/
 function onGetView(r) { // 사진이나 글을 클릭하면 생기는 페이지
-    console.log(r.key, r.val());
+    console.log('my', r.key);
     viewWrapper.querySelector('.title-wrap .content').innerHTML = r.val().title;  //title을 보여줌.
     viewWrapper.querySelector('.writer-wrap .content').innerHTML = r.val().writer;  
     viewWrapper.querySelector('.datetime-wrap .content').innerHTML = moment(r.val().createAt).format('YYYY-MM-DD HH:mm:ss');  
@@ -165,6 +175,18 @@ function onGetView(r) { // 사진이나 글을 클릭하면 생기는 페이지
             html += '</div>';
         }
         viewWrapper.querySelector('.content-wrap').innerHTML += html;
+    }
+    ref.endBefore(r.val().idx).limitToFirst(1).get().then(onGetPrev).catch(onGetError);
+    ref.startAfter(r.val().idx).limitToFirst(1).get().then(onGetNext).catch(onGetError);
+    function onGetPrev(r) {
+        r.forEach(function(v, i) {
+            console.log('prev', v.key);
+        });
+    }
+    function onGetNext(r) {
+        r.forEach(function(v, i) {
+            console.log('next', v.key);
+        });
     }
 }
 
@@ -197,7 +219,7 @@ function onGetRecent(r) {
             
             var isImg = v.val().upfile && v.val().upfile.file.type !== allowType[3];    //upfile이 이미지인 경우.
             if(isImg)   {
-                var html = '<li class="list" data-idx="'+v.val().idx+'" style="background-image: url(\''+v.val().upfile.path+'\');" onclick="goView(\''+v.key+'\');">';
+                var html = '<li class="list" data-key="'+v.key+'" data-idx="'+v.val().idx+'" style="background-image: url(\''+v.val().upfile.path+'\');" onclick="goView(\''+v.key+'\', this);">';
                 html += '<div class="ratio"></div>';
                 html += '</li>';
                 recent.innerHTML += html;
