@@ -51,6 +51,9 @@ var btReset = document.querySelector('.write-wrapper .bt-reset');    // 글작�
 var writeWrapper = document.querySelector('.write-wrapper');         // 글작성 모달창
 var writeForm = document.writeForm;                                  // 글작성 form , 'form'만 name명 으로 접근가능
 var writeTitle = writeWrapper.querySelector('h2.title');
+var oldFile = writeWrapper.querySelector('.oldfile');
+var thumbFile = writeWrapper.querySelector('.thumb');
+var deleteFile = writeWrapper.querySelector('.file-delete');
 var loading = document.querySelector('.write-wrapper .loading-wrap');   // 파일 업로드 로딩바
 var tbody = document.querySelector('.list-tbl tbody');
 var recent = document.querySelector('.recent-wrapper .list-wp');
@@ -172,6 +175,22 @@ function sortTr() {
     });
 }
 
+function removeFile(fname, key) {
+    storage.child(filename.substr(0, 10)).child(fname)
+        .delete()
+        .then(onRemoveDone)
+        .catch(onRemoveError);
+    function onRemoveDone() {
+        db.child(key).update({ upfile: null });
+        oldFile.style.display = 'none';
+    }
+    function onRemoveError(err) {
+        console.log(err);
+        alert('삭제에 실패하였습니다. 관리자에게 문의하세요.');
+    }
+}
+
+
 /*************** event callback *****************/
 function onUpdate(e) {
     db.child(this.dataset['key']).once('value', function(v) {
@@ -277,7 +296,6 @@ function onGetData(r) {
 function onGetRecent(r) {
     if(r.numChildren() > 0){  //  데이터가 존재함
         r.forEach(function(v, i) {
-            
             var isImg = v.val().upfile && v.val().upfile.file.type !== allowType[3];    //upfile이 이미지인 경우.
             if(isImg)   {
                 var html = '<li class="list" data-key="'+v.key+'" data-idx="'+v.val().idx+'" style="background-image: url(\''+v.val().upfile.path+'\');" onclick="goView(\''+v.key+'\');">';
@@ -334,6 +352,7 @@ function onWrite(e, key) {    // 모달창이 오픈 되면.
     writeForm.key.value = '';
     writeTitle.innerHTML = '게시글 작성';
     btSave.innerHTML = '글쓰기';
+    oldFile.style.display = 'none';
     writeForm.title.focus();
     // update 처리
     if(key) db.child(key).once('value', onGetUpdate);
@@ -344,8 +363,32 @@ function onWrite(e, key) {    // 모달창이 오픈 되면.
         writeForm.content.value = r.val().content;
         writeTitle.innerHTML = '게시글 수정';
         btSave.innerHTML = '수정하기';
+        if(r.val().upfile) {
+            oldFile.style.display = 'flex';
+            var isImg = r.val().upfile && r.val().upfile.file.type !== allowType[3]
+            deleteFile.dataset['key'] = r.key;
+            if(isImg) {
+                thumbFile.src = r.val().upfile.path;
+                thumbFile.classList.remove('video');
+            }
+            else {
+                thumbFile.src = '../img/video.png';
+                thumbFile.classList.add('video');
+            }
+        }
     }
 }
+
+function onDeleteFile(e) {  // html에 onclick는 event를 받지 못한다.
+    if(confirm('첨부파일을 삭제하시겠습니까?')){
+        var key = this.dataset['key'];
+        db.child(key).once('value', function(r) {
+            var filename = r.val().upfile.name;
+            removeFile(filename, key);
+        });
+    }
+}
+
 
 function onClose() {    // 모달창이 닫히면
     $(writeWrapper).stop().fadeOut(300);
@@ -384,10 +427,10 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
 	}
 	// firebase save
     var data = {};
-    data.user = user.uid;
     data.title = title.value;
     data.writer = writer.value;
     data.content = content.value;
+    data.user = user.uid;
     data.createAt = new Date().getTime();
     data.readcnt = 0;
     db.limitToLast(1).get().then(getLastIdx).catch(onGetError);
@@ -509,6 +552,7 @@ btWrite.addEventListener('click', onWrite);
 btWrite2.addEventListener('click', onWrite);
 btUpdate.addEventListener('click', onUpdate);
 btDelete.addEventListener('click', onDelete);
+deleteFile.addEventListener('click', onDeleteFile);
 btClose.addEventListener('click', onClose);
 btReset.addEventListener('click', onWriteReset);
 writeForm.addEventListener('submit', onWriteSubmit);
@@ -544,4 +588,4 @@ recentInit(ref);
                     recentInit(ref);
                 }
             }
- */
+*/
