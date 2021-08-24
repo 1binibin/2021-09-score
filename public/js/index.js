@@ -245,7 +245,7 @@ function onGetView(r) { // 사진이나 글을 클릭하면 생기는 페이지
     viewWrapper.querySelector('.title-wrap .content').innerHTML = r.val().title;  //title을 보여줌.
     viewWrapper.querySelector('.writer-wrap .content').innerHTML = r.val().writer;  
     viewWrapper.querySelector('.datetime-wrap .content').innerHTML = moment(r.val().createAt).format('YYYY-MM-DD HH:mm:ss');  
-    viewWrapper.querySelector('.readnum-wrap .content').innerHTML = r.val().readcnt || 0;  
+    viewWrapper.querySelector('.readnum-wrap .content').innerHTML = r.val().readcnt || 0;  //조회수
     viewWrapper.querySelector('.content-wrap').innerHTML = r.val().content || ''; 
     btUpdate.dataset['key'] = r.key;
     btDelete.dataset['key'] = r.key;
