@@ -88,15 +88,23 @@ function goView(k, el) {
     .get()
     .then(onGetView)
     .catch(onGetError);
-    var nextKey = null;
-    var prevKey = null;
-    if(el.tagName === 'TD') {
-        nextKey = $(el).parent().prev().data('key');
-        prevKey = $(el).parent().next().data('key');
+}
+
+function setNavi(prev, next) {
+    if(prev){
+        var html = '<div onclick="goView(\''+prev.key+'\');">'+prev.title+'</div>';
+        viewWrapper.querySelector('.prev-page .link').innerHTML = html;
     }
     else {
-        nextKey = $(el).prev().data('key');
-        prevKey = $(el).next().data('key');
+        viewWrapper.querySelector('.prev-page .link').innerHTML = '이전글이 없습니다';
+    }
+    if(next) {
+        var html = '<div onclick="goView(\''+next.key+'\');">'+next.title+'</div>';
+        viewWrapper.querySelector('.next-page .link').innerHTML = html;
+    }
+    else {
+        viewWrapper.querySelector('.next-page .link').innerHTML = '다음글이 없습니다.';
+
     }
 }
 
@@ -176,19 +184,24 @@ function onGetView(r) { // 사진이나 글을 클릭하면 생기는 페이지
         }
         viewWrapper.querySelector('.content-wrap').innerHTML += html;
     }
-    ref.endBefore(r.val().idx).limitToFirst(1).get().then(onGetPrev).catch(onGetError);
-    ref.startAfter(r.val().idx).limitToFirst(1).get().then(onGetNext).catch(onGetError);
-    function onGetPrev(r) {
-        r.forEach(function(v, i) {
-            console.log('prev', v.key);
+    // prev, next 만들기
+    var prev = null;
+    var next = null;
+    ref.startAt(r.val().idx).limitToFirst(2).get().then(function(r2) {
+        r2.forEach(function(v) {
+            if(v.key && v.key !== r.key) prev = {key: v.key, title: v.val().title};
         });
-    }
-    function onGetNext(r) {
-        r.forEach(function(v, i) {
-            console.log('next', v.key);
+        setNavi(prev, next);
+    }).catch(onGetError);
+    ref.endAt(r.val().idx).limitToLast(2).get().then(function(r2) {
+        r2.forEach(function(v) {
+            if(v.key && v.key !== r.key) next = {key: v.key, title: v.val().title};
         });
-    }
+        setNavi(prev, next);
+    }).catch(onGetError);
 }
+
+
 
 function onObserver(el, observer) {
     el.forEach(function(v) {
