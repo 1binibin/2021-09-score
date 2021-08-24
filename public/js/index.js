@@ -43,6 +43,7 @@ var btSave = document.querySelector('.write-wrapper .bt-save');      // 글작�
 var btLogin = document.querySelector('.header-wrapper .bt-login');   // 로긴버튼
 var btLogout = document.querySelector('.header-wrapper .bt-logout'); // 로그아웃 버튼
 var btWrite = document.querySelector('.list-wrapper .bt-write');     // 글작성 모달창 오픈버튼
+var btWrite2 = document.querySelector('.view-wrapper .bt-write');     // 글작성 모달창 오픈버튼
 var btClose = document.querySelector('.write-wrapper .bt-close');    // 글작성 모달창 클로즈버튼
 var btReset = document.querySelector('.write-wrapper .bt-reset');    // 글작성 모달창 리셋버튼
 var writeWrapper = document.querySelector('.write-wrapper');         // 글작성 모달창
@@ -61,12 +62,12 @@ var listCnt = 5;    // 데이터를 한번에 불러올 갯수
 /*************** user function  *****************/
 function viewShow(el) {
     switch(el){
-        case 'LIST':
+        case 'LIST':    // 리스트로 돌아가기
             listWrapper.style.display = 'block';
             viewWrapper.style.display = 'none';
             updateWrapper.style.display = 'none';
             break;
-        case 'VIEW':
+        case 'VIEW':    // 뷰페이지가기
         listWrapper.style.display = 'none';
         viewWrapper.style.display = 'block';
         updateWrapper.style.display = 'block';
@@ -149,6 +150,22 @@ function onGetView(r) { // 사진이나 글을 클릭하면 생기는 페이지
     viewWrapper.querySelector('.datetime-wrap .content').innerHTML = moment(r.val().createAt).format('YYYY-MM-DD HH:mm:ss');  
     viewWrapper.querySelector('.readnum-wrap .content').innerHTML = r.val().readcnt || 0;  
     viewWrapper.querySelector('.content-wrap').innerHTML = r.val().content || '';  
+    if(r.val().upfile){
+        var html = '';
+        if(allowType.indexOf(r.val().upfile.file.type) === 3) {
+            html = '<div class="my-3 text-center">';
+            html += '<video autoplay muted loop controls class="mw-100">';
+            html += '<source src="'+r.val().upfile.path+'"></source>';
+            html += '</video>';
+            html += '</div>';
+        }
+        else {
+            html = '<div class="my-3 text-center">';
+            html += '<img src="'+r.val().upfile.path+'" class="mx-100">';
+            html += '</div>';
+        }
+        viewWrapper.querySelector('.content-wrap').innerHTML += html;
+    }
 }
 
 function onObserver(el, observer) {
@@ -207,11 +224,13 @@ function onAuthChanged(r) { // login, logout 상태가 변하면..
         btLogin.style.display = 'none';
         btLogout.style.display = 'block';
         btWrite.style.display = 'inline-block';
+        btWrite2.style.display = 'inline-block';
     }
     else {  // 로그아웃 되면 UI가 할일
         btLogin.style.display = 'block';
         btLogout.style.display = 'none';
         btWrite.style.display = 'none';
+        btWrite2.style.display = 'none';
     }
 }
 
@@ -295,11 +314,7 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
             data.upfile = { folder: 'root/board/'+savename.folder, name: savename.file, file: file };
         }
         else {
-            db.push(data).key; // firebase저장
-            onClose();
-            listInit();
-            recent.innerHTML = '';
-            recentInit(ref);
+            saveAfter();
         }
     }
     
@@ -325,16 +340,21 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
 
     function onSuccess(r) { // r: 실제 웹으로 접근 가능한 경로
         data.upfile.path = r;
-        db.push(data).key;
-        onClose();
-        listInit();
-        recent.innerHTML = '';
-        recentInit(ref);
+        saveAfter();
     } 
 
     function onError(err) {
         alert('파일 가져오기에 실패 하였습니다. 다시 시도해 주세요.');
         console.log(err);
+    }
+
+    function saveAfter() {
+        db.push(data).key;  //firebase 저장
+        onClose();
+        listInit();
+        recent.innerHTML = '';
+        recentInit(ref);
+        viewShow('LIST');
     }
 }
 
@@ -390,6 +410,7 @@ auth.onAuthStateChanged(onAuthChanged);
 btLogin.addEventListener('click', onLogin);
 btLogout.addEventListener('click', onLogout);
 btWrite.addEventListener('click', onWrite);
+btWrite2.addEventListener('click', onWrite);
 btClose.addEventListener('click', onClose);
 btReset.addEventListener('click', onWriteReset);
 writeForm.addEventListener('submit', onWriteSubmit);
