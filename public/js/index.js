@@ -359,7 +359,7 @@ function onLogout() {   //btLogout이 클릭되면
 }
 
 function onWrite(e, key) {    // 모달창이 오픈 되면.
-    console.log(e, key)
+    // console.log(e, key)
     loading.style.display = 'none';
     $(writeWrapper).stop().fadeIn(300); //javascript론 까다로워서 jQuery 사용
     writeForm.key.value = '';
