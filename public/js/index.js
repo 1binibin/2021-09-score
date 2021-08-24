@@ -1,4 +1,13 @@
 /* 
+
+        .substring()
+"2021082414_76ea3b52-1394-4c04-9b3b-2084d1".substring(시작idx, idx앞에까지)
+"2021082414_76ea3b52-1394-4c04-9b3b-2084d1".substring(7, 10) "414"
+
+        .substr()
+"2021082414_76ea3b52-1394-4c04-9b3b-2084d1".substr(시작idx, 갯수);
+"2021082414_76ea3b52-1394-4c04-9b3b-2084d1".substr(7, 3);     "414"
+
 $().method().method //$()가 리턴값의 .method를 가지고있고 또 메서드를 가지고 있어야 체인닝이 됨
 
 $().next()      // 내 바로 다음     - JS: nextSibling
@@ -99,11 +108,11 @@ function goView(k) {
     // location.href = './view.html?key='+k;    html은 변수를 받지못한다. key만 전달함.
     viewShow('VIEW');
     db
-    .child(k)
-    .get()
-    .then(onGetView)
-    .catch(onGetError);
-}
+        .child(k)
+        .get()
+        .then(onGetView)
+        .catch(onGetError);
+    }
 
 function setNavi(prev, next) {
     if(prev){
@@ -175,19 +184,20 @@ function sortTr() {
     });
 }
 
-function removeFile(fname, key) {
-    storage.child(filename.substr(0, 10)).child(fname)
+function removeFile(fname, key, cb) {
+    storage.child(fname.substr(0, 10)).child(fname)
         .delete()
         .then(onRemoveDone)
         .catch(onRemoveError);
     function onRemoveDone() {
         db.child(key).update({ upfile: null });
         oldFile.style.display = 'none';
+        if(cb) cb();
     }
     function onRemoveError(err) {
         console.log(err);
         alert('삭제에 실패하였습니다. 관리자에게 문의하세요.');
-    }
+    } 
 }
 
 
@@ -205,11 +215,14 @@ function onUpdate(e) {
 }
 
 function onDelete(e) {
+    var key = this.dataset['key'];
     if(confirm('정말로 삭제하시겠습니까?')) {
-        db.child(this.dataset['key']).once('value', function(v) {
+        db.child(key).once('value', function(v) {
             if(user && v.val().user === user.uid){
-                db.child(e.target.dataset['key']).remove(); // this로 했으나 함수안에서의 this 바뀜. -->e.target
-                viewShow('LIST');
+                if(v.val().upfile) removeFile(v.val().upfile.name, key, function() {
+                    db.child(key).remove();
+                    viewShow('LIST');
+                } )
             }
             else {
                 alert('권한이 없습니다.');
@@ -367,6 +380,7 @@ function onWrite(e, key) {    // 모달창이 오픈 되면.
             oldFile.style.display = 'flex';
             var isImg = r.val().upfile && r.val().upfile.file.type !== allowType[3]
             deleteFile.dataset['key'] = r.key;
+            oldFile.querySelector('.filename').innerHTML = r.val().upfile.file.name;
             if(isImg) {
                 thumbFile.src = r.val().upfile.path;
                 thumbFile.classList.remove('video');
@@ -413,7 +427,9 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
 	var writer = writeForm.writer;
 	var upfile = writeForm.upfile;
 	var content = writeForm.content;
-    var upload;
+	var key = writeForm.key.value;
+    var upload;     // 파일 업로드 객체
+    var data = {};  // 저장할 데이터 객체
 	if(!user) {
         alert('로그인 후 이용하세요.')
         return false;
@@ -426,40 +442,44 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
 		return false;
 	}
 	// firebase save
-    var data = {};
     data.title = title.value;
     data.writer = writer.value;
     data.content = content.value;
-    data.user = user.uid;
-    data.createAt = new Date().getTime();
-    data.readcnt = 0;
-    db.limitToLast(1).get().then(getLastIdx).catch(onGetError);
-    function getLastIdx(r) {
-        if(r.numChildren() === 0){
-            data.idx = 99999999;
-        }
-        else {
-            r.forEach(function(v) {
-            data.idx = Number(v.val().idx) - 1;
-            });
-        }
-
-        if(upfile.files.length) {       // 파일이 존재하면 처리 로직
-            var file = {
-                name: upfile.files[0].name,
-                size: upfile.files[0].size,
-                type: upfile.files[0].type
+    
+    if(key) { // 수정
+        db.child(key).once('value', onGetData);
+        function onGetData(r) {
+            if(upfile.files.length) {
+                if(r.val().upfile) removeFile(r.val().upfile.name, key, saveFile);
+                else saveFile();
             }
-            var savename = genFile();
-            var uploader = storage.child(savename.folder).child(savename.file).put(upfile.files[0]);
-            uploader.on('state_changed', onUploading, onUploadError, onUploaded);
-            data.upfile = { folder: 'root/board/'+savename.folder, name: savename.file, file: file };
-        }
-        else {
-            saveAfter();
+            else saveAfter();
         }
     }
-    
+    else {  // 신규
+        data.user = user.uid;
+        data.createAt = new Date().getTime();
+        data.readcnt = 0;
+        db.limitToLast(1).get().then(getLastIdx).catch(onGetError);
+        function getLastIdx(r) {
+            if(r.numChildren() === 0) data.idx = 99999999;
+            else  r.forEach(function(v) { data.idx = Number(v.val().idx) - 1; });
+            if(upfile.files.length) saveFile();
+            else saveAfter();
+        }
+    }
+
+    function saveFile() {
+        var file = {
+            name: upfile.files[0].name,
+            size: upfile.files[0].size,
+            type: upfile.files[0].type
+        }
+        var savename = genFile();
+        var uploader = storage.child(savename.folder).child(savename.file).put(upfile.files[0]);
+        uploader.on('state_changed', onUploading, onUploadError, onUploaded);
+        data.upfile = { folder: 'root/board/'+savename.folder, name: savename.file, file: file };
+    }
 
     function onUploading(snapshot) { // 파일이 업로드 되는 동안
         loading.style.display = 'flex';
@@ -491,11 +511,12 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
     }
 
     function saveAfter() {
-        db.push(data).key;  //firebase 저장
+        if(key) db.child(key).update(data);
+        else db.push(data).key;  //firebase 저장
         onClose();
         viewShow('LIST');
     }
-}
+}   // onWriteSubmit 끝
 
 
 
