@@ -50,6 +50,7 @@ var btClose = document.querySelector('.write-wrapper .bt-close');    // 글작�
 var btReset = document.querySelector('.write-wrapper .bt-reset');    // 글작성 모달창 리셋버튼
 var writeWrapper = document.querySelector('.write-wrapper');         // 글작성 모달창
 var writeForm = document.writeForm;                                  // 글작성 form , 'form'만 name명 으로 접근가능
+var writeTitle = writeWrapper.querySelector('h2.title');
 var loading = document.querySelector('.write-wrapper .loading-wrap');   // 파일 업로드 로딩바
 var tbody = document.querySelector('.list-tbl tbody');
 var recent = document.querySelector('.recent-wrapper .list-wp');
@@ -79,18 +80,14 @@ function viewShow(el) {
         case 'LIST':    // 리스트로 돌아가기
             listWrapper.style.display = 'block';
             viewWrapper.style.display = 'none';
-            updateWrapper.style.display = 'none';
             globalKey = null;
+            recent.innerHTML = '';
+            listInit();
+            recentInit(ref);
             break;
         case 'VIEW':    // 뷰페이지가기
         listWrapper.style.display = 'none';
         viewWrapper.style.display = 'block';
-        updateWrapper.style.display = 'block';
-            break;
-        case 'UPDATE':
-            listWrapper.style.display = 'none';
-            viewWrapper.style.display = 'none';
-            updateWrapper.style.display = 'block';
             break;
     }
 }
@@ -152,7 +149,7 @@ function setHTML(k, v) {    //데이터 넣을때
     html += '</td>';
     html += '<td>'+v.writer+'</td>';
     html += '<td>'+moment(v.createdAt).format('YYYY-MM-DD')+'</td>';
-    html += '<td>0</td>';
+    html += '<td>'+(v.readcnt || 0)+'</td>';
     html += '</tr>';
     tbody.innerHTML += html;
     tr = tbody.querySelectorAll('tr');
@@ -177,7 +174,15 @@ function sortTr() {
 
 /*************** event callback *****************/
 function onUpdate(e) {
-
+    db.child(this.dataset['key']).once('value', function(v) {
+        if(user && v.val().user === user.uid){
+            onWrite(e, e.target.dataset['key']);
+        }
+        else {
+            alert('권한이 없습니다.');
+            viewShow('LIST');
+        }
+    });
 }
 
 function onDelete(e) {
@@ -186,9 +191,6 @@ function onDelete(e) {
             if(user && v.val().user === user.uid){
                 db.child(e.target.dataset['key']).remove(); // this로 했으나 함수안에서의 this 바뀜. -->e.target
                 viewShow('LIST');
-                listInit();
-                recent.innerHTML = '';
-                recentInit(ref);
             }
             else {
                 alert('권한이 없습니다.');
@@ -200,7 +202,8 @@ function onDelete(e) {
 
 function onGetView(r) { // 사진이나 글을 클릭하면 생기는 페이지
     globalKey = r.val().user;
-    console.log('my', r.key);
+    viewButton(true);
+    // console.log('my', r.key);
     viewWrapper.querySelector('.title-wrap .content').innerHTML = r.val().title;  //title을 보여줌.
     viewWrapper.querySelector('.writer-wrap .content').innerHTML = r.val().writer;  
     viewWrapper.querySelector('.datetime-wrap .content').innerHTML = moment(r.val().createAt).format('YYYY-MM-DD HH:mm:ss');  
@@ -208,7 +211,6 @@ function onGetView(r) { // 사진이나 글을 클릭하면 생기는 페이지
     viewWrapper.querySelector('.content-wrap').innerHTML = r.val().content || ''; 
     btUpdate.dataset['key'] = r.key;
     btDelete.dataset['key'] = r.key;
-    viewButton(true);
     if(r.val().upfile){
         var html = '';
         if(allowType.indexOf(r.val().upfile.file.type) === 3) {
@@ -240,6 +242,11 @@ function onGetView(r) { // 사진이나 글을 클릭하면 생기는 페이지
         });
         setNavi(prev, next);
     }).catch(onGetError);
+
+    // readcnt update
+    db.child(r.key).update({
+        readcnt: r.val().readcnt ? r.val().readcnt +1 : 1
+    })
 }
 
 
@@ -320,10 +327,24 @@ function onLogout() {   //btLogout이 클릭되면
     auth.signOut();
 }
 
-function onWrite() {    // 모달창이 오픈 되면.
+function onWrite(e, key) {    // 모달창이 오픈 되면.
+    console.log(e, key)
     loading.style.display = 'none';
     $(writeWrapper).stop().fadeIn(300); //javascript론 까다로워서 jQuery 사용
+    writeForm.key.value = '';
+    writeTitle.innerHTML = '게시글 작성';
+    btSave.innerHTML = '글쓰기';
     writeForm.title.focus();
+    // update 처리
+    if(key) db.child(key).once('value', onGetUpdate);
+    function onGetUpdate(r) {
+        writeForm.key.value = key
+        writeForm.title.value = r.val().title;
+        writeForm.writer.value = r.val().writer;
+        writeForm.content.value = r.val().content;
+        writeTitle.innerHTML = '게시글 수정';
+        btSave.innerHTML = '수정하기';
+    }
 }
 
 function onClose() {    // 모달창이 닫히면
@@ -429,9 +450,6 @@ function onWriteSubmit(e) { //btSave 클릭시 (글저장시) // validation 검�
     function saveAfter() {
         db.push(data).key;  //firebase 저장
         onClose();
-        listInit();
-        recent.innerHTML = '';
-        recentInit(ref);
         viewShow('LIST');
     }
 }
